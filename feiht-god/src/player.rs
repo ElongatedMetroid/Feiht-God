@@ -1,10 +1,11 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::Inspectable;
 
 use crate::{AsciiSheet, TILE_SIZE};
 
 pub struct PlayerPlugin;
 
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct Player {
     speed: f32,
 }
