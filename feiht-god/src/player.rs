@@ -1,7 +1,7 @@
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 use bevy_inspector_egui::Inspectable;
 
-use crate::{TILE_SIZE, ascii::spawn_ascii_sprite, ascii::AsciiSheet, tilemap::TileCollider};
+use crate::{TILE_SIZE, sprites::spawn_sprite, sprites::SpriteSheet, tilemap::TileCollider};
 
 pub struct PlayerPlugin;
 
@@ -90,28 +90,32 @@ fn wall_collision_check(
     true
 }
 
-fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
-    let player = spawn_ascii_sprite(
+// We need commands because we will be spawning an entity,
+// and the spritesSheet resource will be used to get the graphics handle
+fn spawn_player(mut commands: Commands, sprites: Res<SpriteSheet>) {
+    let player = spawn_sprite(
         &mut commands, 
-        &ascii,
+        &sprites,
         1,
         Color::rgb(0.3, 0.3, 0.9),
         Vec3::new(2.0 * TILE_SIZE, -2.0 * TILE_SIZE, 900.0)
     );
 
     commands.entity(player)
+        // add components to player entity
         .insert(Name::new("Player"))
         .insert(Player { speed: 3.0 });
 
-    let background = spawn_ascii_sprite(
+    let background = spawn_sprite(
         &mut commands, 
-        &ascii, 
+        &sprites, 
         0, 
         Color::rgb(0.5, 0.5, 0.5), 
         Vec3::new(0.0, 0.0, -1.0)
     );
 
     commands.entity(background)
+        // add components to background entity
         .insert(Name::new("Background"));
 
     // set the background to be a child of the player

@@ -10,12 +10,12 @@ pub const TILE_SIZE: f32 = 0.1;
 
 mod player;
 mod debug;
-mod ascii;
+mod sprites;
 mod tilemap;
 
 use player::PlayerPlugin;
 use debug::DebugPlugin;
-use ascii::AsciiPlugin;
+use sprites::SpritePlugin;
 use tilemap::TileMapPlugin;
 
 fn main() {
@@ -46,7 +46,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
         .add_plugin(DebugPlugin)
-        .add_plugin(AsciiPlugin)
+        .add_plugin(SpritePlugin)
         .add_plugin(TileMapPlugin)
         .add_startup_system(spawn_camera)
         .run();
@@ -69,4 +69,3 @@ fn spawn_camera(mut commands: Commands) {
     // Create a new entity with all the components in the bundle
     commands.spawn_bundle(camera);
 }
-
