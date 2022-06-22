@@ -1,7 +1,7 @@
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 use bevy_inspector_egui::Inspectable;
 
-use crate::{TILE_SIZE, sprites::spawn_sprite, sprites::SpriteSheet, tilemap::TileCollider};
+use crate::{TILE_SIZE, sprites::{spawn_sprite, Facing}, sprites::{SpriteSheet, AnimationTimer}, tilemap::TileCollider};
 
 pub struct PlayerPlugin;
 
@@ -16,7 +16,8 @@ impl Plugin for PlayerPlugin {
             .add_startup_system(spawn_player)
             .add_system(player_movement.label("movement"))
             // execute camera system after player movement system
-            .add_system(camera_follow.after("movement"));
+            .add_system(camera_follow.after("movement"))
+            .add_system(animate_player_sprite.after("movement"));
     }
 }
 
@@ -40,35 +41,40 @@ fn camera_follow(
 
 fn player_movement(
     // query for the player, the players transform will need to be adjusted so it is a mutable reference 
-    mut player_query: Query<(&Player, &mut Transform)>, 
+    mut player_query: Query<(&Player, &mut Transform, &mut Facing)>, 
     // query for walls with colliders, we will need the transform of the walls 
     // (again without player is required because the Player component could have a TileCollider component, meaning more than one result/entity)
     wall_query: Query<&Transform, (With<TileCollider>, Without<Player>)>,
     // we will also need a keyboard input here so we will get the Input resource of type KeyCode
     keyboard: Res<Input<KeyCode>>, 
     // we will use the Time resource to multiply by delta time
-    time: Res<Time>
+    time: Res<Time>,
+    mut animation_timer: ResMut<AnimationTimer>
 ) {
     // get the transform and player component out of the query
-    let (player, mut transform) = player_query.single_mut();
-
+    let (player, mut transform, mut facing) = player_query.single_mut();
+    
     // (We can now check for keyboard input and edit the transform since we have a mutable reference to it)
 
     // add/subtract any movement from keypresses on the y axis
     let mut y_delta = 0.0;
     if keyboard.pressed(KeyCode::W) {
+        *facing = Facing::UP;
         y_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::S) {
+        *facing = Facing::DOWN;
         y_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
     // add/subtract any movement from keypresses on the x axis
     let mut x_delta = 0.0;
     if keyboard.pressed(KeyCode::D) {
+        *facing = Facing::RIGHT;
         x_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::A) {
+        *facing = Facing::LEFT;
         x_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
@@ -86,6 +92,12 @@ fn player_movement(
     if !wall_collision_check(target, &wall_query) {
         // update the players position to what they pressed
         transform.translation = target;
+    }
+
+    if y_delta + x_delta == 0.0 {
+        animation_timer.has_moved = false;
+    } else {
+        animation_timer.has_moved = true;
     }
 }
 
@@ -120,6 +132,43 @@ fn wall_collision_check(
     false
 }
 
+fn animate_player_sprite(
+    mut query: Query<(&mut TextureAtlasSprite, &mut Facing), With<Player>>,
+    mut animation_timer: ResMut<AnimationTimer>,
+    time: Res<Time>
+) {
+    let (mut sprite, direction) = query.get_single_mut().unwrap();
+    animation_timer.timer.tick(time.delta());
+
+    // if the player has moved change the sprite to the movement in the particular direction
+    if animation_timer.has_moved {   
+        // every half a half a second (or every half of the animation timer duration),
+        // switch the sprite that is being displayed
+        if animation_timer.timer.elapsed_secs() > animation_timer.timer.duration().as_secs_f32() / 2.0{
+            match *direction {
+                Facing::UP => sprite.index = 5,
+                Facing::DOWN => sprite.index = 7,
+                Facing::LEFT => sprite.index = 3,
+                Facing::RIGHT => sprite.index = 1,
+            }
+        } else {
+            match *direction {
+                Facing::UP => sprite.index = 6,
+                Facing::DOWN => sprite.index = 8,
+                Facing::LEFT => sprite.index = 4,
+                Facing::RIGHT => sprite.index = 2,
+            }
+        }
+    } else { // if the player stops moving go to "idle" position
+        match *direction {
+            Facing::UP => sprite.index = 5,
+            Facing::DOWN => sprite.index = 7,
+            Facing::LEFT => sprite.index = 3,
+            Facing::RIGHT => sprite.index = 1,
+        }
+    }
+}
+
 fn spawn_player(
     // we need commands because we will be spawning a entity (inside of spawn_sprite),
     // we will also need commands because we will be adding components to our player entity
@@ -139,7 +188,8 @@ fn spawn_player(
     commands.entity(player)
         // add components to player entity
         .insert(Name::new("Player"))
-        .insert(Player { speed: 3.0 });
+        .insert(Player { speed: 3.0 })
+        .insert(Facing::RIGHT);
 
     // let background = spawn_sprite(
     //     &mut commands, 

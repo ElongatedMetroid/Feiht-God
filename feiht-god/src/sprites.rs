@@ -1,8 +1,22 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::Inspectable;
 
-use crate::TILE_SIZE;
+use crate::{TILE_SIZE};
 
 pub struct SpritePlugin;
+
+#[derive(Component, Inspectable)]
+pub enum Facing {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+pub struct AnimationTimer{
+    pub timer: Timer,
+    pub has_moved: bool
+}
 
 // create my own resource that holds a copy of the specific sprites sheet handle
 pub struct SpriteSheet(Handle<TextureAtlas>);
@@ -12,7 +26,8 @@ impl Plugin for SpritePlugin {
         app
             // we want this sprite sheet to be the first thing loaded so nothing trys
             // to acess a sprite while they are still not fully loaded
-            .add_startup_system_to_stage(StartupStage::PreStartup, load_sprites);
+            .add_startup_system_to_stage(StartupStage::PreStartup, load_sprites)
+            .insert_resource(AnimationTimer{ timer: Timer::from_seconds(0.5, true), has_moved: false });
     }
 }
 
