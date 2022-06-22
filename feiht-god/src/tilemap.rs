@@ -27,11 +27,16 @@ fn create_simple_map(mut commands: Commands, sprites: Res<SpriteSheet>) {
                     &mut commands, 
                     &sprites, 
                     char as usize, 
-                    Color::rgb(0.9, 0.9, 0.9), 
                     Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 100.0)
                 );
-                if char == '#' {
-                    commands.entity(tile).insert(TileCollider);
+                
+                let mut curr_char = 'a' as usize;
+                while curr_char < 'z' as usize {
+                    if curr_char == char as usize {
+                        commands.entity(tile).insert(TileCollider);
+                    }
+
+                    curr_char += 1;
                 }
 
                 tiles.push(tile);
