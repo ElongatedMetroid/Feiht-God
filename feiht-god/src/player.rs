@@ -97,7 +97,6 @@ fn spawn_player(mut commands: Commands, sprites: Res<SpriteSheet>) {
         &mut commands, 
         &sprites,
         1,
-        Color::rgb(0.3, 0.3, 0.9),
         Vec3::new(2.0 * TILE_SIZE, -2.0 * TILE_SIZE, 900.0)
     );
 
@@ -109,8 +108,7 @@ fn spawn_player(mut commands: Commands, sprites: Res<SpriteSheet>) {
     let background = spawn_sprite(
         &mut commands, 
         &sprites, 
-        0, 
-        Color::rgb(0.5, 0.5, 0.5), 
+        0,  
         Vec3::new(0.0, 0.0, -1.0)
     );
 

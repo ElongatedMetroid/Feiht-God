@@ -18,12 +18,10 @@ pub fn spawn_sprite(
     commands: &mut Commands,
     sprites: &SpriteSheet,
     index: usize,
-    color: Color,
     translation: Vec3
 ) -> Entity {
         // create a texture atlas sprite, and set the index to 1 (the smile face on the sheet)
         let mut sprite = TextureAtlasSprite::new(index);
-        sprite.color = color;
         sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
     
         commands
@@ -47,10 +45,10 @@ fn load_sprites(mut commands: Commands, assets: Res<AssetServer>, mut texture_at
     // the sprites sprite sheet is also padded so we will use from_grid_with_padding
     let atlas = TextureAtlas::from_grid_with_padding(
         image,
-        Vec2::splat(16.0),
-        16,
-        16,
-        Vec2::splat(2.0)
+        Vec2::splat(15.0),
+        32,
+        32,
+        Vec2::splat(1.0)
     );
 
     // add atlas to texture atlases resource
