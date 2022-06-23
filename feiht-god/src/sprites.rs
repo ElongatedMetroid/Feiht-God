@@ -17,10 +17,8 @@ pub enum Facing {
     RIGHT
 }
 
-pub struct AnimationTimer{
-    pub timer: Timer,
-    pub has_moved: bool
-}
+#[derive(Component)]
+pub struct AnimationTimer(pub Timer);
 
 // create my own resource that holds a copy of the specific sprites sheet handle
 pub struct SpriteSheet(Handle<TextureAtlas>);
@@ -30,8 +28,7 @@ impl Plugin for SpritePlugin {
         app
             // we want this sprite sheet to be the first thing loaded so nothing trys
             // to acess a sprite while they are still not fully loaded
-            .add_startup_system_to_stage(StartupStage::PreStartup, load_sprites)
-            .insert_resource(AnimationTimer{ timer: Timer::from_seconds(0.5, true), has_moved: false });
+            .add_startup_system_to_stage(StartupStage::PreStartup, load_sprites);
     }
 }
 

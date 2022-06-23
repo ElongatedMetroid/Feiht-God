@@ -7,6 +7,7 @@ pub struct PlayerPlugin;
 
 #[derive(Component, Inspectable)]
 pub struct Player {
+    pub has_moved: bool,
     speed: f32,
 }
 
@@ -41,7 +42,7 @@ fn camera_follow(
 
 fn player_movement(
     // query for the player, the players transform will need to be adjusted so it is a mutable reference 
-    mut player_query: Query<(&Player, &mut Transform, &mut Facing)>, 
+    mut player_query: Query<(&mut Player, &mut Transform, &mut Facing)>, 
     // query for walls with colliders, we will need the transform of the walls 
     // (again without player is required because the Player component could have a TileCollider component, meaning more than one result/entity)
     wall_query: Query<&Transform, (With<TileCollider>, Without<Player>)>,
@@ -49,10 +50,9 @@ fn player_movement(
     keyboard: Res<Input<KeyCode>>, 
     // we will use the Time resource to multiply by delta time
     time: Res<Time>,
-    mut animation_timer: ResMut<AnimationTimer>
 ) {
     // get the transform and player component out of the query
-    let (player, mut transform, mut facing) = player_query.single_mut();
+    let (mut player, mut transform, mut facing) = player_query.single_mut();
     
     // (We can now check for keyboard input and edit the transform since we have a mutable reference to it)
 
@@ -111,9 +111,9 @@ fn player_movement(
     }
 
     if y_delta + x_delta == 0.0 {
-        animation_timer.has_moved = false;
+        player.has_moved = false;
     } else {
-        animation_timer.has_moved = true;
+        player.has_moved = true;
     }
 }
 
@@ -148,19 +148,19 @@ fn wall_collision_check(
     false
 }
 
+// TODO: Add the other diagnal animations, and create idle animations
 fn animate_player_sprite(
-    mut query: Query<(&mut TextureAtlasSprite, &mut Facing), With<Player>>,
-    mut animation_timer: ResMut<AnimationTimer>,
+    mut query: Query<(&mut TextureAtlasSprite, &mut Facing, &mut AnimationTimer, &Player)>,
     time: Res<Time>
 ) {
-    let (mut sprite, direction) = query.get_single_mut().unwrap();
-    animation_timer.timer.tick(time.delta());
+    let (mut sprite, direction, mut animation_timer,player) = query.get_single_mut().unwrap();
+    animation_timer.0.tick(time.delta());
 
     // if the player has moved change the sprite to the movement in the particular direction
-    if animation_timer.has_moved {   
+    if player.has_moved {   
         // every half a half a second (or every half of the animation timer duration),
         // switch the sprite that is being displayed
-        if animation_timer.timer.elapsed_secs() > animation_timer.timer.duration().as_secs_f32() / 2.0{
+        if animation_timer.0.elapsed_secs() > animation_timer.0.duration().as_secs_f32() / 2.0{
             sprite.index = match *direction {
                 Facing::UP_RIGHT => 9,
                 Facing::DOWN => 7,
@@ -210,8 +210,9 @@ fn spawn_player(
     commands.entity(player)
         // add components to player entity
         .insert(Name::new("Player"))
-        .insert(Player { speed: 3.0 })
-        .insert(Facing::RIGHT);
+        .insert(Player { speed: 3.0, has_moved: false })
+        .insert(Facing::RIGHT)
+        .insert(AnimationTimer(Timer::from_seconds(0.5, true)));
 
     // let background = spawn_sprite(
     //     &mut commands, 
