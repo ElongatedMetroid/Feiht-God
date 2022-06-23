@@ -78,6 +78,22 @@ fn player_movement(
         x_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
+    // diagnal
+    if y_delta != 0.0 && x_delta != 0.0 {
+        if y_delta > 0.0 && x_delta > 0.0 {
+            *facing = Facing::UP_RIGHT;
+        } 
+        if y_delta > 0.0 && x_delta < 0.0 {
+            *facing = Facing::UP_LEFT;
+        } 
+        if y_delta < 0.0 && x_delta > 0.0 {
+            *facing = Facing::DOWN_RIGHT;
+        } 
+        if y_delta < 0.0 && x_delta < 0.0 {
+            *facing = Facing::DOWN_LEFT;
+        }
+    }
+
     // the target as in where the player should be from the pressed buttons
     let target = transform.translation + Vec3::new(x_delta, 0.0, 0.0);
     // if there is no collision between the player and a wall ... 
@@ -145,26 +161,32 @@ fn animate_player_sprite(
         // every half a half a second (or every half of the animation timer duration),
         // switch the sprite that is being displayed
         if animation_timer.timer.elapsed_secs() > animation_timer.timer.duration().as_secs_f32() / 2.0{
-            match *direction {
-                Facing::UP => sprite.index = 5,
-                Facing::DOWN => sprite.index = 7,
-                Facing::LEFT => sprite.index = 3,
-                Facing::RIGHT => sprite.index = 1,
+            sprite.index = match *direction {
+                Facing::UP_RIGHT => 9,
+                Facing::DOWN => 7,
+                Facing::UP => 5,
+                Facing::LEFT => 3,
+                Facing::RIGHT => 1,
+                _ => 0,
             }
         } else {
-            match *direction {
-                Facing::UP => sprite.index = 6,
-                Facing::DOWN => sprite.index = 8,
-                Facing::LEFT => sprite.index = 4,
-                Facing::RIGHT => sprite.index = 2,
+            sprite.index = match *direction {
+                Facing::UP_RIGHT => 10,
+                Facing::DOWN => 8,
+                Facing::UP => 6,
+                Facing::LEFT => 4,
+                Facing::RIGHT => 2,
+                _ => 0,
             }
         }
     } else { // if the player stops moving go to "idle" position
-        match *direction {
-            Facing::UP => sprite.index = 5,
-            Facing::DOWN => sprite.index = 7,
-            Facing::LEFT => sprite.index = 3,
-            Facing::RIGHT => sprite.index = 1,
+        sprite.index = match *direction {
+            Facing::UP_RIGHT => 9,
+            Facing::DOWN => 7,
+            Facing::UP => 5,
+            Facing::LEFT => 3,
+            Facing::RIGHT => 1,
+            _ => 0,
         }
     }
 }
