@@ -26,22 +26,14 @@ fn main() {
         .insert_resource(WindowDescriptor {
             width: height * RESOLUTION,
             height: height,
-            position: Some(Vec2::splat(100.0)),
-            resize_constraints: WindowResizeConstraints {
-                min_width: height * RESOLUTION,
-                min_height: height,
-                max_width: 1920.0,
-                max_height: 1080.0,
-            },
-            scale_factor_override: None,
             title: String::from("Feiht God"),
             present_mode: PresentMode::Fifo,
-            resizable: true,
+            resizable: false,
             decorations: true,
             cursor_visible: true,
             cursor_locked: false,
             mode: WindowMode::Windowed,
-            transparent: false
+            ..Default::default()
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
