@@ -19,6 +19,8 @@ impl Plugin for CombatPlugin {
     }
 }
 
+// center the camera to the enemy
+// we will need the transform of the camera so we can edit the translation
 fn combat_camera(mut camera_query: Query<&mut Transform, With<Camera>>) {
     let mut camera_transform = camera_query.single_mut();
 
@@ -27,7 +29,9 @@ fn combat_camera(mut camera_query: Query<&mut Transform, With<Camera>>) {
 }
 
 fn spawn_enemy(
+    // commands will be used to spawn a new entity
     mut commands: Commands, 
+    // we will need the sprite_sheet to pass to spawn_sprite
     sprite_sheet: Res<SpriteSheet>
 ) {
     let sprite = spawn_sprite(
@@ -44,11 +48,15 @@ fn spawn_enemy(
 }
 
 fn despawn_enemy(
+    // commands will be used to despawn the entity
     mut commands: Commands,
+    // query for all the enemy entitys (so we can despawn them)
     enemy_query: Query<Entity, With<Enemy>>
 )
 {
+    // iterate through all the enemys
     for entity in enemy_query.iter() {
+        // and despawn the enemy and its children
         commands.entity(entity).despawn_recursive();
     }
 }

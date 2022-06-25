@@ -29,7 +29,11 @@ impl Plugin for TileMapPlugin {
 }
 
 fn hide_map(
+    // query for the children of the Map, this will be used to check if 
+    // the map has any children
     children_query: Query<&mut Children, With<Map>>,
+    // query for the visibility component, this will be used to toggle
+    // off the visibility of the maps children (if the map has any)
     mut child_visibility_query: Query<&mut Visibility, Without<Map>>
 ) {
     // if there is children to the map
@@ -46,7 +50,11 @@ fn hide_map(
 }
 
 fn show_map(
+    // query for the children of the Map, this will be used to check if 
+    // the map has any children
     children_query: Query<&mut Children, With<Map>>,
+    // query for the visibility component, this will be used to toggle
+    // on the visibility of the maps children (if the map has any)
     mut child_visibility_query: Query<&mut Visibility, Without<Map>>
 ) {
     // if there is children to the map

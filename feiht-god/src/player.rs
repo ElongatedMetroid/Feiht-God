@@ -13,7 +13,7 @@ pub struct EncounterTracker {
 
 #[derive(Component, Inspectable)]
 pub struct Player {
-    pub has_moved: bool,
+    pub is_moving: bool,
     speed: f32,
 }
 
@@ -91,10 +91,16 @@ fn player_encounter_checking(
     // commands will need to be used to spawn the fadeout here, they
     // will be used to pass to the create_fadeout function
     mut commands: Commands,
-    // query for 
+    // query for the Player (to see if the player has moved), EncounterTracker 
+    // (to have each enemy come each time the timer is up), and the Transform 
+    // component (to check if the player is coliding with grass)
     mut player_query: Query<(&Player, &mut EncounterTracker, &Transform)>,
+    // we will also need the Transform of the EncounterSpawner to compare with 
+    // the player transforn to see if the player is coliding with an EncounterSpawner
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
+    // the time resource will be used to track time between each encounter
     time: Res<Time>,
+    // the sprite sheet will be used to create the fadeout sprite
     sprite_sheet: Res<SpriteSheet>
 ) {
     let (player, mut encounter_tracker, player_translation) = player_query.single_mut();
@@ -104,7 +110,7 @@ fn player_encounter_checking(
     if encounter_query
         .iter()
         .any(|&transform| wall_collision_check(player_translation, transform.translation)) 
-        && player.has_moved
+        && player.is_moving
     {
         // tick the timer every time the player is walking through an EncounterSpawner
         encounter_tracker.timer.tick(time.delta());
@@ -213,9 +219,9 @@ fn player_movement(
     }
 
     if y_delta != 0.0 || x_delta != 0.0 {
-        player.has_moved = true;
+        player.is_moving = true;
     } else {
-        player.has_moved = false;
+        player.is_moving = false;
     }
 }
 
@@ -249,7 +255,7 @@ fn animate_player_sprite(
     animation_timer.0.tick(time.delta());
 
     // if the player has moved change the sprite to the movement in the particular direction
-    if player.has_moved {   
+    if player.is_moving {   
         // every half a half a second (or every half of the animation timer duration),
         // switch the sprite that is being displayed
         if animation_timer.0.elapsed_secs() > animation_timer.0.duration().as_secs_f32() / 2.0{
@@ -314,7 +320,7 @@ fn spawn_player(
         .insert(Name::new("Player"))
         .insert(Player { 
             speed: 4.0, 
-            has_moved: false 
+            is_moving: false 
         })
         .insert(Facing::Right)
         .insert(AnimationTimer(Timer::from_seconds(0.5, true)))
