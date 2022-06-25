@@ -36,8 +36,13 @@ impl Plugin for PlayerPlugin {
 }
 
 fn hide_player(
+    // get visibility component so we can hide the player 
     mut player_query: Query<&mut Visibility, With<Player>>,
+    // get the Children of the player to check if the player has children
     children_query: Query<&mut Children, With<Player>>,
+    // get the visibility components of everything except entitys with 
+    // the player component, we will use this to get a mutable reference
+    // to each child of the player
     mut child_visibility_query: Query<&mut Visibility, Without<Player>>
 ) {
     let mut player_visibility = player_query.single_mut();
@@ -57,8 +62,13 @@ fn hide_player(
 }
 
 fn show_player(
+    // get the visibility component so we can show the player
     mut player_query: Query<&mut Visibility, With<Player>>,
+    // get the children component of the player to check if the player has children 
     children_query: Query<&mut Children, With<Player>>,
+    // get visibility component of everything except entitys with the player component,
+    // this will be used to get a mutable reference to the visibility of the given
+    // child component
     mut child_visibility_query: Query<&mut Visibility, Without<Player>>
 ) {
     let mut player_visibility = player_query.single_mut();
@@ -78,10 +88,12 @@ fn show_player(
 }
 
 fn player_encounter_checking(
+    // commands will need to be used to spawn the fadeout here, they
+    // will be used to pass to the create_fadeout function
     mut commands: Commands,
+    // query for 
     mut player_query: Query<(&Player, &mut EncounterTracker, &Transform)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
-    mut state: ResMut<State<GameState>>,
     time: Res<Time>,
     sprite_sheet: Res<SpriteSheet>
 ) {
@@ -141,22 +153,22 @@ fn player_movement(
     // add/subtract any movement from keypresses on the y axis
     let mut y_delta = 0.0;
     if keyboard.pressed(KeyCode::W) {
-        *facing = Facing::UP;
+        *facing = Facing::Up;
         y_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::S) {
-        *facing = Facing::DOWN;
+        *facing = Facing::Down;
         y_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
     // add/subtract any movement from keypresses on the x axis
     let mut x_delta = 0.0;
     if keyboard.pressed(KeyCode::D) {
-        *facing = Facing::RIGHT;
+        *facing = Facing::Right;
         x_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::A) {
-        *facing = Facing::LEFT;
+        *facing = Facing::Left;
         x_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
@@ -165,16 +177,16 @@ fn player_movement(
         y_delta /= 1.5;
         x_delta /= 1.5;
         if y_delta > 0.0 && x_delta > 0.0 {
-            *facing = Facing::UP_RIGHT;
+            *facing = Facing::UpRight;
         } 
         else if y_delta > 0.0 && x_delta < 0.0 {
-            *facing = Facing::UP_LEFT;
+            *facing = Facing::UpLeft;
         } 
         else if y_delta < 0.0 && x_delta > 0.0 {
-            *facing = Facing::DOWN_RIGHT;
+            *facing = Facing::DownRight;
         } 
         else if y_delta < 0.0 && x_delta < 0.0 {
-            *facing = Facing::DOWN_LEFT;
+            *facing = Facing::DownLeft;
         }
     }
 
@@ -242,40 +254,40 @@ fn animate_player_sprite(
         // switch the sprite that is being displayed
         if animation_timer.0.elapsed_secs() > animation_timer.0.duration().as_secs_f32() / 2.0{
             sprite.index = match *direction {
-                Facing::DOWN_RIGHT => 15,
-                Facing::DOWN_LEFT => 13,
-                Facing::UP_RIGHT => 11,
-                Facing::UP_LEFT => 9,
+                Facing::DownRight => 15,
+                Facing::DownLeft => 13,
+                Facing::UpRight => 11,
+                Facing::UpLeft => 9,
 
-                Facing::DOWN => 7,
-                Facing::UP => 5,
-                Facing::LEFT => 3,
-                Facing::RIGHT => 1,
+                Facing::Down => 7,
+                Facing::Up => 5,
+                Facing::Left => 3,
+                Facing::Right => 1,
             }
         } else {
             sprite.index = match *direction {
-                Facing::DOWN_RIGHT => 16,
-                Facing::DOWN_LEFT => 14,
-                Facing::UP_RIGHT => 12,
-                Facing::UP_LEFT => 10,
+                Facing::DownRight => 16,
+                Facing::DownLeft => 14,
+                Facing::UpRight => 12,
+                Facing::UpLeft => 10,
 
-                Facing::DOWN => 8,
-                Facing::UP => 6,
-                Facing::LEFT => 4,
-                Facing::RIGHT => 2,
+                Facing::Down => 8,
+                Facing::Up => 6,
+                Facing::Left => 4,
+                Facing::Right => 2,
             }
         }
     } else { // if the player stops moving go to "idle" position
         sprite.index = match *direction {
-            Facing::DOWN_RIGHT => 15,
-            Facing::DOWN_LEFT => 13,
-            Facing::UP_RIGHT => 11,
-            Facing::UP_LEFT => 9,
+            Facing::DownRight => 15,
+            Facing::DownLeft => 13,
+            Facing::UpRight => 11,
+            Facing::UpLeft => 9,
 
-            Facing::DOWN => 7,
-            Facing::UP => 5,
-            Facing::LEFT => 3,
-            Facing::RIGHT => 1,
+            Facing::Down => 7,
+            Facing::Up => 5,
+            Facing::Left => 3,
+            Facing::Right => 1,
         }
     }
 }
@@ -293,7 +305,8 @@ fn spawn_player(
         &sprites,
         // index 1 contains forward facing player sprite
         1,
-        Vec3::new(5.0 * TILE_SIZE, -5.0 * TILE_SIZE, 900.0)
+        Vec3::new(5.0 * TILE_SIZE, -5.0 * TILE_SIZE, 900.0),
+        1.0
     );
 
     commands.entity(player)
@@ -303,7 +316,7 @@ fn spawn_player(
             speed: 4.0, 
             has_moved: false 
         })
-        .insert(Facing::RIGHT)
+        .insert(Facing::Right)
         .insert(AnimationTimer(Timer::from_seconds(0.5, true)))
         .insert(EncounterTracker {
             timer: Timer::from_seconds(1.0, true)

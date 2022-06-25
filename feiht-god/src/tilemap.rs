@@ -74,7 +74,8 @@ fn create_simple_map(mut commands: Commands, sprites: Res<SpriteSheet>) {
                     &mut commands, 
                     &sprites, 
                     char as usize, 
-                    Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 100.0)
+                    Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 100.0),
+                    1.0
                 );
                 
                 let mut curr_char = 'a' as usize;

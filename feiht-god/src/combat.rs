@@ -28,13 +28,14 @@ fn combat_camera(mut camera_query: Query<&mut Transform, With<Camera>>) {
 
 fn spawn_enemy(
     mut commands: Commands, 
-    sprite_sheet: Res<SpriteSheet>) 
-{
+    sprite_sheet: Res<SpriteSheet>
+) {
     let sprite = spawn_sprite(
         &mut commands, 
         &sprite_sheet, 
         127, 
-        Vec3::new(0.0, 0.5, 100.0)
+        Vec3::new(0.0, 0.5, 100.0),
+        10.0
     );
 
     commands.entity(sprite)
@@ -55,7 +56,6 @@ fn despawn_enemy(
 fn test_exit_combat(
     mut commands: Commands,
     mut keyboard: ResMut<Input<KeyCode>>, 
-    mut state: ResMut<State<GameState>>,
     sprite_sheet: Res<SpriteSheet>
 ) {
     if keyboard.just_pressed(KeyCode::Space) {

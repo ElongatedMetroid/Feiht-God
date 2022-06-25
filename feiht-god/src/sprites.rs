@@ -7,14 +7,14 @@ pub struct SpritePlugin;
 
 #[derive(Component, Inspectable)]
 pub enum Facing {
-    UP,
-    UP_RIGHT,
-    UP_LEFT,
-    DOWN,
-    DOWN_RIGHT,
-    DOWN_LEFT,
-    LEFT,
-    RIGHT
+    Up,
+    UpRight,
+    UpLeft,
+    Down,
+    DownRight,
+    DownLeft,
+    Left,
+    Right
 }
 
 #[derive(Component, Default, Reflect)]
@@ -41,7 +41,9 @@ pub fn spawn_sprite(
     // which sprite to draw from the sheet
     index: usize,
     // position of the entity
-    translation: Vec3
+    translation: Vec3,
+    // size of the entity
+    scale: f32,
 ) -> Entity {
         // create a new texture atlas sprite and set it to the index provided
         let mut sprite = TextureAtlasSprite::new(index);
@@ -61,6 +63,7 @@ pub fn spawn_sprite(
                 // transformation that will be where the sprite is drawn
                 transform: Transform { 
                     translation: translation,
+                    scale: Vec3::splat(scale),
                     ..Default::default()
                 },
                 ..Default::default()
