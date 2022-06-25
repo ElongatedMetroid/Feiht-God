@@ -12,16 +12,27 @@ mod player;
 mod debug;
 mod sprites;
 mod tilemap;
+mod combat;
+mod fadeout;
 
 use player::PlayerPlugin;
 use debug::DebugPlugin;
 use sprites::SpritePlugin;
 use tilemap::TileMapPlugin;
+use combat::CombatPlugin;
+use fadeout::FadeoutPlugin;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum GameState {
+    Overworld,
+    Combat,
+}
 
 fn main() {
     let height = 720.0;
 
     App::new()
+        .add_state(GameState::Overworld)
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(WindowDescriptor {
             width: height * RESOLUTION,
@@ -40,6 +51,8 @@ fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(SpritePlugin)
         .add_plugin(TileMapPlugin)
+        .add_plugin(CombatPlugin)
+        .add_plugin(FadeoutPlugin)
         .add_startup_system(spawn_camera)
         .run();
 }
