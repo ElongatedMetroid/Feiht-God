@@ -2,16 +2,63 @@ use std::{fs::File, io::{BufReader, BufRead}};
 
 use bevy::prelude::*;
 
-use crate::{sprites::{SpriteSheet, spawn_sprite}, TILE_SIZE};
+use crate::{sprites::{SpriteSheet, spawn_sprite}, TILE_SIZE, GameState};
 
 pub struct TileMapPlugin;
+
+#[derive(Component)]
+struct Map;
+
+#[derive(Component)]
+pub struct EncounterSpawner;
 
 #[derive(Component)]
 pub struct TileCollider;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(create_simple_map);
+        app
+            .add_startup_system(create_simple_map)
+            .add_system_set(
+                SystemSet::on_enter(GameState::Overworld).with_system(show_map))
+            .add_system_set(
+                SystemSet::on_exit(GameState::Overworld).with_system(hide_map))
+            
+            ;
+    }
+}
+
+fn hide_map(
+    children_query: Query<&mut Children, With<Map>>,
+    mut child_visibility_query: Query<&mut Visibility, Without<Map>>
+) {
+    // if there is children to the map
+    if let Ok(children) = children_query.get_single() {
+        // for each child
+        for child in children.iter() {
+            // get the specific child entitys Visibility component from the query,
+            // (since we queryed for all entitys with the Visibility component)
+            if let Ok(mut child_vis) = child_visibility_query.get_mut(*child) {
+                child_vis.is_visible = false;
+            }
+        }
+    }
+}
+
+fn show_map(
+    children_query: Query<&mut Children, With<Map>>,
+    mut child_visibility_query: Query<&mut Visibility, Without<Map>>
+) {
+    // if there is children to the map
+    if let Ok(children) = children_query.get_single() {
+        // for each child
+        for child in children.iter() {
+            // get the specific child entitys Visibility component from the query,
+            // (since we queryed for all entitys with the Visibility component)
+            if let Ok(mut child_vis) = child_visibility_query.get_mut(*child) {
+                child_vis.is_visible = true;
+            }
+        }
     }
 }
 
@@ -38,13 +85,16 @@ fn create_simple_map(mut commands: Commands, sprites: Res<SpriteSheet>) {
 
                     curr_char += 1;
                 }
+                if char == '!' {
+                    commands.entity(tile).insert(EncounterSpawner);
+                }
 
                 tiles.push(tile);
             }
         }
     }
-
     commands.spawn()
+        .insert(Map)
         .insert(Name::new("Map"))
         .insert(Transform::default())
         .insert(GlobalTransform::default())

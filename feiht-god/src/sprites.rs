@@ -17,11 +17,12 @@ pub enum Facing {
     RIGHT
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct AnimationTimer(pub Timer);
 
 // create my own resource that holds a copy of the specific sprites sheet handle
-pub struct SpriteSheet(Handle<TextureAtlas>);
+pub struct SpriteSheet(pub Handle<TextureAtlas>);
 
 impl Plugin for SpritePlugin {
     fn build(&self, app: &mut App) {
