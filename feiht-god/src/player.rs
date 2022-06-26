@@ -161,17 +161,6 @@ fn player_movement(
 
     // (We can now check for keyboard input and edit the transform since we have a mutable reference to it)
 
-    // add/subtract any movement from keypresses on the y axis
-    let mut y_delta = 0.0;
-    if keyboard.pressed(KeyCode::W)  || keyboard.pressed(KeyCode::Up){
-        *facing = Facing::Up;
-        y_delta += player.speed * TILE_SIZE * time.delta_seconds();
-    }
-    if keyboard.pressed(KeyCode::S) || keyboard.pressed(KeyCode::Down){
-        *facing = Facing::Down;
-        y_delta -= player.speed * TILE_SIZE * time.delta_seconds();
-    }
-
     // add/subtract any movement from keypresses on the x axis
     let mut x_delta = 0.0;
     if keyboard.pressed(KeyCode::D) || keyboard.pressed(KeyCode::Right) {
@@ -183,22 +172,21 @@ fn player_movement(
         x_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
+    // add/subtract any movement from keypresses on the y axis
+    let mut y_delta = 0.0;
+    if keyboard.pressed(KeyCode::W)  || keyboard.pressed(KeyCode::Up){
+        *facing = Facing::Up;
+        y_delta += player.speed * TILE_SIZE * time.delta_seconds();
+    }
+    if keyboard.pressed(KeyCode::S) || keyboard.pressed(KeyCode::Down){
+        *facing = Facing::Down;
+        y_delta -= player.speed * TILE_SIZE * time.delta_seconds();
+    }
+
     // diagnal
     if y_delta != 0.0 && x_delta != 0.0 {
         y_delta /= 1.5;
         x_delta /= 1.5;
-        if y_delta > 0.0 && x_delta > 0.0 {
-            *facing = Facing::UpRight;
-        } 
-        else if y_delta > 0.0 && x_delta < 0.0 {
-            *facing = Facing::UpLeft;
-        } 
-        else if y_delta < 0.0 && x_delta > 0.0 {
-            *facing = Facing::DownRight;
-        } 
-        else if y_delta < 0.0 && x_delta < 0.0 {
-            *facing = Facing::DownLeft;
-        }
     }
 
     // the target as in where the player should be from the pressed buttons
@@ -268,11 +256,6 @@ fn animate_player_sprite(
         // switch the sprite that is being displayed
         if animation_timer.0.elapsed_secs() > animation_timer.0.duration().as_secs_f32() / 2.0{
             sprite.index = match *direction {
-                Facing::DownRight => 7,
-                Facing::DownLeft => 7,
-                Facing::UpRight => 11,
-                Facing::UpLeft => 9,
-
                 Facing::Down => 7,
                 Facing::Up => 5,
                 Facing::Left => 3,
@@ -280,11 +263,6 @@ fn animate_player_sprite(
             }
         } else {
             sprite.index = match *direction {
-                Facing::DownRight => 8,
-                Facing::DownLeft => 8,
-                Facing::UpRight => 12,
-                Facing::UpLeft => 10,
-
                 Facing::Down => 8,
                 Facing::Up => 6,
                 Facing::Left => 4,
@@ -293,11 +271,6 @@ fn animate_player_sprite(
         }
     } else { // if the player stops moving go to "idle" position
         sprite.index = match *direction {
-            Facing::DownRight => 7,
-            Facing::DownLeft => 7,
-            Facing::UpRight => 11,
-            Facing::UpLeft => 9,
-
             Facing::Down => 7,
             Facing::Up => 5,
             Facing::Left => 3,
@@ -332,7 +305,7 @@ fn spawn_player(
             is_moving: false 
         })
         .insert(Facing::Right)
-        .insert(AnimationTimer(Timer::from_seconds(0.5, true)))
+        .insert(AnimationTimer(Timer::from_seconds(0.25, true)))
         .insert(EncounterTracker {
             timer: Timer::from_seconds(1.0, true)
         });

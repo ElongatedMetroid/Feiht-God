@@ -8,11 +8,7 @@ pub struct SpritePlugin;
 #[derive(Component, Inspectable)]
 pub enum Facing {
     Up,
-    UpRight,
-    UpLeft,
     Down,
-    DownRight,
-    DownLeft,
     Left,
     Right
 }
