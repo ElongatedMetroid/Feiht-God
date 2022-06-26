@@ -14,6 +14,7 @@ pub struct EncounterTracker {
 #[derive(Component, Inspectable)]
 pub struct Player {
     pub is_moving: bool,
+    pub is_active: bool,
     speed: f32,
 }
 
@@ -63,7 +64,7 @@ fn hide_player(
 
 fn show_player(
     // get the visibility component so we can show the player
-    mut player_query: Query<&mut Visibility, With<Player>>,
+    mut player_query: Query<(&mut Visibility, &mut Player)>,
     // get the children component of the player to check if the player has children 
     children_query: Query<&mut Children, With<Player>>,
     // get visibility component of everything except entitys with the player component,
@@ -71,8 +72,9 @@ fn show_player(
     // child component
     mut child_visibility_query: Query<&mut Visibility, Without<Player>>
 ) {
-    let mut player_visibility = player_query.single_mut();
+    let (mut player_visibility, mut player) = player_query.single_mut();
     player_visibility.is_visible = true;
+    player.is_active = true;
 
     // if there is children to the player
     if let Ok(children) = children_query.get_single() {
@@ -94,7 +96,7 @@ fn player_encounter_checking(
     // query for the Player (to see if the player has moved), EncounterTracker 
     // (to have each enemy come each time the timer is up), and the Transform 
     // component (to check if the player is coliding with grass)
-    mut player_query: Query<(&Player, &mut EncounterTracker, &Transform)>,
+    mut player_query: Query<(&mut Player, &mut EncounterTracker, &Transform)>,
     // we will also need the Transform of the EncounterSpawner to compare with 
     // the player transforn to see if the player is coliding with an EncounterSpawner
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
@@ -103,7 +105,7 @@ fn player_encounter_checking(
     // the sprite sheet will be used to create the fadeout sprite
     sprite_sheet: Res<SpriteSheet>
 ) {
-    let (player, mut encounter_tracker, player_translation) = player_query.single_mut();
+    let (mut player, mut encounter_tracker, player_translation) = player_query.single_mut();
     let player_translation = player_translation.translation;
 
     // iterate through all the EncounterSpawner transforms returned from the query and if there is collision and the player has moved ...
@@ -117,6 +119,7 @@ fn player_encounter_checking(
 
         // every time the timer finishes switch to combat state
         if encounter_tracker.timer.just_finished() {
+            player.is_active = false;
             create_fadeout(&mut commands, GameState::Combat, &sprite_sheet);
         }
     }
@@ -154,26 +157,28 @@ fn player_movement(
     // get the transform and player component out of the query
     let (mut player, mut transform, mut facing) = player_query.single_mut();
 
+    if !player.is_active { return; }
+
     // (We can now check for keyboard input and edit the transform since we have a mutable reference to it)
 
     // add/subtract any movement from keypresses on the y axis
     let mut y_delta = 0.0;
-    if keyboard.pressed(KeyCode::W) {
+    if keyboard.pressed(KeyCode::W)  || keyboard.pressed(KeyCode::Up){
         *facing = Facing::Up;
         y_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
-    if keyboard.pressed(KeyCode::S) {
+    if keyboard.pressed(KeyCode::S) || keyboard.pressed(KeyCode::Down){
         *facing = Facing::Down;
         y_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
 
     // add/subtract any movement from keypresses on the x axis
     let mut x_delta = 0.0;
-    if keyboard.pressed(KeyCode::D) {
+    if keyboard.pressed(KeyCode::D) || keyboard.pressed(KeyCode::Right) {
         *facing = Facing::Right;
         x_delta += player.speed * TILE_SIZE * time.delta_seconds();
     }
-    if keyboard.pressed(KeyCode::A) {
+    if keyboard.pressed(KeyCode::A) || keyboard.pressed(KeyCode::Left){
         *facing = Facing::Left;
         x_delta -= player.speed * TILE_SIZE * time.delta_seconds();
     }
@@ -252,6 +257,9 @@ fn animate_player_sprite(
     time: Res<Time>
 ) {
     let (mut sprite, direction, mut animation_timer,player) = query.get_single_mut().unwrap();
+
+    if !player.is_active { return; }
+
     animation_timer.0.tick(time.delta());
 
     // if the player has moved change the sprite to the movement in the particular direction
@@ -260,8 +268,8 @@ fn animate_player_sprite(
         // switch the sprite that is being displayed
         if animation_timer.0.elapsed_secs() > animation_timer.0.duration().as_secs_f32() / 2.0{
             sprite.index = match *direction {
-                Facing::DownRight => 15,
-                Facing::DownLeft => 13,
+                Facing::DownRight => 7,
+                Facing::DownLeft => 7,
                 Facing::UpRight => 11,
                 Facing::UpLeft => 9,
 
@@ -272,8 +280,8 @@ fn animate_player_sprite(
             }
         } else {
             sprite.index = match *direction {
-                Facing::DownRight => 16,
-                Facing::DownLeft => 14,
+                Facing::DownRight => 8,
+                Facing::DownLeft => 8,
                 Facing::UpRight => 12,
                 Facing::UpLeft => 10,
 
@@ -285,8 +293,8 @@ fn animate_player_sprite(
         }
     } else { // if the player stops moving go to "idle" position
         sprite.index = match *direction {
-            Facing::DownRight => 15,
-            Facing::DownLeft => 13,
+            Facing::DownRight => 7,
+            Facing::DownLeft => 7,
             Facing::UpRight => 11,
             Facing::UpLeft => 9,
 
@@ -320,6 +328,7 @@ fn spawn_player(
         .insert(Name::new("Player"))
         .insert(Player { 
             speed: 4.0, 
+            is_active: true,
             is_moving: false 
         })
         .insert(Facing::Right)
